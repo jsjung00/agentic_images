@@ -104,6 +104,5 @@ if __name__ == "__main__":
     noisy_images, psnrs, ssims = noiser.get_noisy_versions("gaussian", [0.001, 0.1, 0.5, 1.0], index=0)
 
     noiser.visualize_noisy(noisy_images, psnrs, ssims)
-    
 
     pass 

@@ -5,6 +5,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 from medmnist import BloodMNIST
 from utils import save_rgb_image
+from torch.utils.data import Dataset
+
+
+class MedMNISTWrapper(Dataset):
+    def __init__(self, ds):
+        self.ds = ds 
+    
+    def __len__(self):
+        return len(self.ds)
+    
+    def __getitem__(self, index):
+        pil_image = self.ds[index][0]
+        # convert to float numpy array 
+        image = np.array(pil_image)
+        convertToFloat = (image.dtype == np.uint8)
+        if convertToFloat:
+            image = ski.util.img_as_float(image)
+        return image 
 
 
 def noise(image, noise_type, var):
@@ -37,15 +55,16 @@ class MultipleNoise:
         '''
         assert image is not None or index is not None, "must get image somehow"
         if image is None:
-            image = self.ds[index]
+            image = self.ds[index] 
         
         noisy_images, psnrs, ssims = [], [], []
 
         for var in vars:
             noised_version = noise(image, noise_type, var)
+            noisy_images.append(noised_version)
             # calculate PSNR and SSIM
             psnr = metrics.peak_signal_noise_ratio(image, noised_version)
-            ssim = metrics.structural_similarity(image, noised_version)
+            ssim = metrics.structural_similarity(image, noised_version, channel_axis=2, data_range=1.0)
             psnrs.append(psnr)
             ssims.append(ssim)
         
@@ -73,14 +92,18 @@ class MultipleNoise:
         plt.show()
 
 
-
 if __name__ == "__main__":
     # load the blood cell dataset
     blood_ds = BloodMNIST(split="val", download=True, size=224)
-    image = blood_ds[0]
-    breakpoint()
-    save_rgb_image(image, "files/first_blood.png")
-    
+    blood_ds = MedMNISTWrapper(blood_ds)
 
+    image = blood_ds[0]
+    save_rgb_image(image, "files/first_blood.png")
+
+    noiser = MultipleNoise(blood_ds)
+    noisy_images, psnrs, ssims = noiser.get_noisy_versions("gaussian", [0.001, 0.1, 0.5, 1.0], index=0)
+
+    noiser.visualize_noisy(noisy_images, psnrs, ssims)
+    
 
     pass 

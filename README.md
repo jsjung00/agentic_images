@@ -1,3 +1,3 @@
-# Agentic Images
-Agent systems to evaluate image restoration quality 
+# Agentic Image Restoration Evaluation
+Agent ensemble to evaluate image restoration models 
 
